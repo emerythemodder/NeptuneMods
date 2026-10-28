@@ -1,0 +1,16 @@
+[
+  {
+    "slug": "modmenu",
+    "title": "Mod Menu",
+    "summary": "Adds a mod menu to view the list of mods you have installed.",
+    "type": "mods",
+    "repo": "TerraformersMC/ModMenu",
+    "loaders": ["fabric", "quilt"],
+    "gameVersions": ["1.21.1", "1.21.11", "26.1", "26.2"],
+    "categories": ["utility"],
+    "icon": "",
+    "links": {},
+    "submittedBy": "TerraformersMC",
+    "added": "2026-10-27T00:00:00Z"
+  }
+]
