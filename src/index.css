@@ -1,0 +1,181 @@
+@import "tailwindcss";
+
+:root {
+  --accent: #8152d4;
+  --accent-fg: #ffffff;
+  --accent-soft: color-mix(in oklab, var(--accent) 14%, transparent);
+  --modrinth: #1bd96a;
+  --curseforge: #f16436;
+}
+
+:root,
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --bg: #100d16;
+  --surface: #17131f;
+  --surface-2: #1f1a29;
+  --line: #2a2437;
+  --line-strong: #3a3148;
+  --text: #ece8f3;
+  --muted: #a69db7;
+  --faint: #756b87;
+}
+
+:root[data-theme="light"] {
+  color-scheme: light;
+  --bg: #f7f5fb;
+  --surface: #ffffff;
+  --surface-2: #f1edf7;
+  --line: #e5dfee;
+  --line-strong: #d3cae1;
+  --text: #1a1522;
+  --muted: #5f566f;
+  --faint: #8e859d;
+  --modrinth: #0f9d4f;
+  --curseforge: #d9531f;
+}
+
+@theme inline {
+  --color-bg: var(--bg);
+  --color-surface: var(--surface);
+  --color-surface-2: var(--surface-2);
+  --color-line: var(--line);
+  --color-line-strong: var(--line-strong);
+  --color-fg: var(--text);
+  --color-muted: var(--muted);
+  --color-faint: var(--faint);
+  --color-accent: var(--accent);
+  --color-accent-fg: var(--accent-fg);
+  --color-accent-soft: var(--accent-soft);
+  --color-modrinth: var(--modrinth);
+  --color-curseforge: var(--curseforge);
+  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, monospace;
+}
+
+@layer base {
+  html {
+    background: var(--bg);
+    color: var(--text);
+    font-feature-settings: "cv11", "ss01";
+    -webkit-font-smoothing: antialiased;
+  }
+  body {
+    @apply font-sans text-[14px] leading-normal;
+    min-height: 100vh;
+  }
+  ::selection {
+    background: var(--accent-soft);
+  }
+  :focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+  }
+  button {
+    cursor: pointer;
+  }
+  button:disabled {
+    cursor: default;
+  }
+}
+
+@layer components {
+  .btn {
+    @apply inline-flex items-center justify-center gap-1.5 h-8 px-3 rounded-md border border-line bg-surface-2 text-fg text-[13px] font-medium whitespace-nowrap transition-colors;
+  }
+  .btn:hover:not(:disabled) {
+    @apply border-line-strong;
+  }
+  .btn:disabled {
+    @apply opacity-40;
+  }
+  .btn-primary {
+    @apply bg-accent text-accent-fg border-transparent;
+  }
+  .btn-primary:hover:not(:disabled) {
+    @apply border-transparent brightness-110;
+  }
+  .btn-ghost {
+    @apply bg-transparent border-transparent text-muted;
+  }
+  .btn-ghost:hover:not(:disabled) {
+    @apply text-fg bg-surface-2 border-transparent;
+  }
+  .btn-icon {
+    @apply w-8 px-0;
+  }
+  .input {
+    @apply h-8 w-full rounded-md border border-line bg-surface px-2.5 text-[13px] text-fg placeholder:text-faint transition-colors;
+  }
+  .input:focus {
+    @apply outline-none border-accent;
+  }
+  textarea.input {
+    @apply h-auto py-2 leading-relaxed;
+  }
+  .label {
+    @apply block text-[12px] font-medium text-muted mb-1.5;
+  }
+  .panel {
+    @apply rounded-lg border border-line bg-surface;
+  }
+  .chip {
+    @apply inline-flex items-center h-5 px-1.5 rounded text-[11px] font-medium bg-surface-2 text-muted border border-line whitespace-nowrap;
+  }
+  .num {
+    font-variant-numeric: tabular-nums;
+  }
+}
+
+/* Third-party project descriptions. */
+.prose-body {
+  @apply text-[14px] leading-relaxed text-fg break-words;
+}
+.prose-body > * + * {
+  margin-top: 0.9em;
+}
+.prose-body h1,
+.prose-body h2,
+.prose-body h3,
+.prose-body h4 {
+  @apply font-semibold text-fg;
+  margin-top: 1.4em;
+}
+.prose-body h1 { font-size: 1.4em; }
+.prose-body h2 { font-size: 1.2em; }
+.prose-body h3 { font-size: 1.05em; }
+.prose-body a {
+  color: var(--accent);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+.prose-body ul { list-style: disc; padding-left: 1.4em; }
+.prose-body ol { list-style: decimal; padding-left: 1.4em; }
+.prose-body li + li { margin-top: 0.25em; }
+.prose-body img {
+  display: inline-block;
+  max-width: 100%;
+  height: auto;
+  border-radius: 6px;
+}
+.prose-body code {
+  @apply font-mono text-[12.5px] bg-surface-2 border border-line rounded px-1 py-px;
+}
+.prose-body pre {
+  @apply bg-surface-2 border border-line rounded-md p-3 overflow-x-auto;
+}
+.prose-body pre code { background: none; border: 0; padding: 0; }
+.prose-body blockquote {
+  @apply border-l-2 border-line-strong pl-3 text-muted;
+}
+.prose-body table { @apply w-full text-[13px]; border-collapse: collapse; }
+.prose-body th, .prose-body td { @apply border border-line px-2 py-1 text-left; }
+.prose-body hr { @apply border-line; }
+.prose-body iframe { display: none; }
+
+.scroll-x {
+  scrollbar-width: none;
+}
+.scroll-x::-webkit-scrollbar {
+  display: none;
+}
