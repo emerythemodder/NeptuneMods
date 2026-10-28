@@ -40,7 +40,7 @@ Run the tests with `npm test`, or try the site with a sample Neptune project wit
    | AAAA  | @     | 2606:50c0:8001::153                |
    | AAAA  | @     | 2606:50c0:8002::153                |
    | AAAA  | @     | 2606:50c0:8003::153                |
-   | CNAME | www   | `<your-github-username>.github.io` |
+   | CNAME | www   | `emerythemodder.github.io` |
 
 2. In the GitHub repo, open **Settings → Pages → Custom domain**, enter `neptunemc.com` and save. When the DNS check
    passes, tick **Enforce HTTPS**. Cloudflare DNS usually updates within minutes; the certificate can take up to an hour.
