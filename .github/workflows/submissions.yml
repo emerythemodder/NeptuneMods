@@ -1,0 +1,66 @@
+name: Neptune submissions
+
+# Submissions arrive as issues opened from the site's Publish page.
+# A maintainer approves one by adding the "approved" label.
+
+on:
+  issues:
+    types: [opened, edited, labeled]
+
+permissions:
+  contents: write
+  issues: write
+  actions: write
+
+concurrency:
+  group: registry
+  cancel-in-progress: false
+
+jobs:
+  handle:
+    if: contains(github.event.issue.body, '<!-- neptune-submission -->') && github.event.issue.state == 'open'
+    runs-on: ubuntu-latest
+    env:
+      GH_TOKEN: ${{ github.token }}
+      ISSUE: ${{ github.event.issue.number }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.repository.default_branch }}
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - id: check
+        run: node scripts/handle-submission.mjs
+
+      - name: Label
+        if: steps.check.outputs.skip != 'true'
+        run: |
+          gh label create submission --color 8152d4 --description "Neptune project submission" --force
+          gh label create approved --color 2da44e --description "Approve a Neptune submission" --force
+          gh issue edit "$ISSUE" --add-label submission
+
+      - name: Publish to registry
+        if: steps.check.outputs.approved == 'true'
+        env:
+          SLUG: ${{ steps.check.outputs.slug }}
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add registry/projects.json
+          git commit -m "Publish $SLUG to Neptune (#$ISSUE)"
+          git push
+          # Pushes made with the workflow token don't trigger other workflows, so start the deploy directly.
+          gh workflow run deploy.yml --ref "${{ github.event.repository.default_branch }}"
+
+      - name: Comment
+        if: steps.check.outputs.skip != 'true' && (github.event.action != 'labeled' || github.event.label.name == 'approved')
+        env:
+          COMMENT: ${{ steps.check.outputs.comment }}
+        run: gh issue comment "$ISSUE" --body "$COMMENT"
+
+      - name: Close
+        if: steps.check.outputs.approved == 'true'
+        run: gh issue close "$ISSUE" --reason completed
