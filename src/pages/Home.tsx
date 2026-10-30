@@ -1,4 +1,4 @@
-import { ArrowRight, Search, Upload } from "lucide-react";
+import { ArrowRight, Download, Search, Upload } from "lucide-react";
 import { useState, type FormEvent } from "react";
 import { getModrinthStats } from "../api/modrinth";
 import { loadRegistry, toProject } from "../api/neptune";
@@ -6,7 +6,7 @@ import { searchAll } from "../api/search";
 import type { ContentType, SortKey } from "../api/types";
 import { ProjectRow, ResultsSkeleton } from "../components/ProjectList";
 import { Notice } from "../components/ui";
-import { CONTENT, CONTENT_TYPES } from "../lib/content";
+import { CONTENT, EDITIONS, typesFor } from "../lib/content";
 import { formatNumber } from "../lib/format";
 import { Link, navigate } from "../lib/router";
 import { useAsync } from "../lib/useAsync";
@@ -89,11 +89,11 @@ export function Home() {
         <div className="flex items-center gap-10">
           <div className="min-w-0 flex-1">
             <h1 className="max-w-2xl text-[28px] font-semibold leading-tight tracking-tight sm:text-[34px]">
-              Search Modrinth and CurseForge in one place.
+              Search Neptune, Modrinth and CurseForge in one place.
             </h1>
             <p className="mt-3 max-w-xl text-muted">
-              Mods, modpacks, shaders, resource packs, data packs, plugins and worlds. Filter by game version and loader, save
-              what you find to collections, and pin favourites to your profile.
+              Java mods, modpacks and shaders, and Bedrock add-ons, maps and skins. Filter by game version and loader, save what
+              you find to collections, and pin favourites to your profile.
             </p>
             <form onSubmit={submit} className="mt-6 flex max-w-xl gap-2">
               <div className="relative flex-1">
@@ -108,11 +108,16 @@ export function Home() {
               </div>
               <button className="btn btn-primary h-10 px-4">Search</button>
             </form>
-            <div className="mt-4 flex flex-wrap gap-1.5">
-              {CONTENT_TYPES.map((t) => (
-                <Link key={t} to={`/browse/${t}`} className="chip h-7 px-2.5 text-[12px] hover:text-fg hover:border-line-strong">
-                  {CONTENT[t].label}
-                </Link>
+            <div className="mt-4 space-y-1.5">
+              {EDITIONS.map((e) => (
+                <div key={e.value} className="flex flex-wrap items-center gap-1.5">
+                  <span className="w-16 text-[11px] font-semibold uppercase tracking-wider text-faint">{e.label}</span>
+                  {typesFor(e.value).map((t) => (
+                    <Link key={t} to={`/browse/${t}`} className="chip h-7 px-2.5 text-[12px] hover:text-fg hover:border-line-strong">
+                      {CONTENT[t].label}
+                    </Link>
+                  ))}
+                </div>
               ))}
             </div>
           </div>
@@ -144,13 +149,25 @@ export function Home() {
         )}
       </section>
 
+      <section className="panel flex flex-wrap items-center justify-between gap-4 p-5">
+        <div>
+          <h2 className="text-[15px] font-semibold">Neptune Launcher for Windows</h2>
+          <p className="mt-1 max-w-xl text-[13px] text-muted">
+            Install mods from here in one click, run Fabric, Quilt, Forge and NeoForge instances, and sign in with Microsoft.
+          </p>
+        </div>
+        <Link to="/download" className="btn btn-primary">
+          <Download size={14} /> Get the launcher
+        </Link>
+      </section>
+
       <NeptuneShelf />
 
       <div className="grid gap-10 lg:grid-cols-2">
         <Shelf title="Most downloaded mods" type="mods" sort="downloads" />
         <Shelf title="Recently updated modpacks" type="modpacks" sort="updated" />
         <Shelf title="Popular shaders" type="shaders" sort="downloads" />
-        <Shelf title="New resource packs" type="resourcepacks" sort="newest" />
+        <Shelf title="Popular Bedrock add-ons" type="bedrock-addons" sort="downloads" />
       </div>
     </div>
   );

@@ -1,4 +1,6 @@
+import { CONTENT } from "../lib/content";
 import { renderMarkdown } from "../lib/html";
+import { getCurseForgeCategories } from "./curseforge";
 import { getJson } from "./http";
 import { getModrinthCategories } from "./modrinth";
 import type { Category, ContentType, Project, ProjectDetail, ProjectLink, ProjectVersion, SearchParams, SourceResult } from "./types";
@@ -152,8 +154,17 @@ export async function getNeptuneVersions(slug: string): Promise<ProjectVersion[]
   }));
 }
 
-/** Neptune uses Modrinth's category names so the filters line up. */
-export function getNeptuneCategories(type: ContentType): Promise<Category[]> {
+const slug = (s: string) => s.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "").slice(0, 32);
+
+/**
+ * Neptune borrows category lists so the filters line up with the other sites:
+ * Modrinth's for Java, and CurseForge's Bedrock ones (as slugs) for Bedrock.
+ */
+export async function getNeptuneCategories(type: ContentType): Promise<Category[]> {
+  if (CONTENT[type].edition === "bedrock") {
+    const cats = await getCurseForgeCategories(type);
+    return [...new Map(cats.map((c) => [slug(c.name), { id: slug(c.name), name: c.name }])).values()];
+  }
   return getModrinthCategories(type === "worlds" ? "mods" : type);
 }
 

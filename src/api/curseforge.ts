@@ -1,5 +1,6 @@
 import { CURSEFORGE_API_KEY } from "../config";
-import { CONTENT, loaderLabel } from "../lib/content";
+import { CONTENT, CURSEFORGE_GAME, loaderLabel } from "../lib/content";
+import { releasesDesc } from "../lib/versions";
 import { sanitizeHtml } from "../lib/html";
 import { getJson } from "./http";
 import type {
@@ -15,7 +16,6 @@ import type {
 } from "./types";
 
 const API = "https://api.curseforge.com/v1";
-const MINECRAFT = 432;
 // CurseForge refuses any request where index + pageSize goes past this.
 const MAX_RESULTS = 10_000;
 
@@ -99,7 +99,7 @@ export async function searchCurseForge(p: SearchParams, limit: number): Promise<
   if (classId == null) return { hits: [], total: 0, skipped: "CurseForge doesn't host this content type." };
 
   const qs = new URLSearchParams({
-    gameId: String(MINECRAFT),
+    gameId: String(CURSEFORGE_GAME[CONTENT[p.type].edition]),
     classId: String(classId),
     sortField: String(SORT_FIELDS[p.sort]),
     sortOrder: "desc",
@@ -175,10 +175,16 @@ export async function getCurseForgeCategories(type: ContentType): Promise<Catego
   const classId = CONTENT[type].curseforge;
   if (classId == null) return [];
   const { data } = await cf<{ data: { id: number; name: string; isClass?: boolean }[] }>(
-    `/categories?gameId=${MINECRAFT}&classId=${classId}`,
+    `/categories?gameId=${CURSEFORGE_GAME[CONTENT[type].edition]}&classId=${classId}`,
   );
   return data
     .filter((c) => !c.isClass)
     .map((c) => ({ id: String(c.id), name: c.name }))
     .sort((a, b) => a.name.localeCompare(b.name));
+}
+
+/** Bedrock game versions, newest first. Modrinth's list only covers Java. */
+export async function getBedrockVersions(): Promise<string[]> {
+  const { data } = await cf<{ data: { versions: string[] }[] }>(`/games/${CURSEFORGE_GAME.bedrock}/versions`);
+  return releasesDesc(data.flatMap((t) => t.versions));
 }

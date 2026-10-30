@@ -1,8 +1,8 @@
 import { CONTENT } from "../lib/content";
-import { getCurseForgeProject, getCurseForgeVersions, searchCurseForge } from "./curseforge";
-import { getModrinthProject, getModrinthVersions, searchModrinth } from "./modrinth";
+import { getBedrockVersions, getCurseForgeProject, getCurseForgeVersions, searchCurseForge } from "./curseforge";
+import { getGameVersions, getModrinthProject, getModrinthVersions, searchModrinth } from "./modrinth";
 import { getNeptuneProject, getNeptuneVersions, searchNeptune } from "./neptune";
-import type { ContentType, Project, ProjectDetail, ProjectVersion, SearchParams, Source, SourceResult } from "./types";
+import type { ContentType, Edition, Project, ProjectDetail, ProjectVersion, SearchParams, Source, SourceResult } from "./types";
 
 export type SourceFilter = "all" | Source;
 
@@ -82,6 +82,11 @@ export async function searchAll(p: SearchParams, source: SourceFilter): Promise<
     modrinth: mr,
     curseforge: cf,
   };
+}
+
+/** Release versions for an edition, newest first. */
+export function gameVersionsFor(edition: Edition): Promise<string[]> {
+  return edition === "bedrock" ? getBedrockVersions() : getGameVersions();
 }
 
 export function getProject(source: Source, id: string): Promise<ProjectDetail> {

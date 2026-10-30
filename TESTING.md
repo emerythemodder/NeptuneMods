@@ -9,7 +9,7 @@ npm install
 npm test
 ```
 
-You should see `pass 35` and `fail 0`. These check:
+You should see `pass 38` and `fail 0`. These check:
 
 - **Submission rules**: bad names, links and versions are rejected, and extra fields people sneak in are dropped.
 - **The approval automation**: valid submissions wait for approval, only the `approved` label publishes, and nobody
@@ -39,6 +39,10 @@ Try each of these:
 - [ ] **Publish**: paste `TerraformersMC/ModMenu` and press **Check**. It finds the latest release and its `.jar`, and
       fills in the name and summary. Locally the site doesn't know its GitHub repo, so you'll see **Copy submission
       text** instead of **Submit on GitHub**. That's expected.
+- [ ] **Bedrock**: click **Bedrock** next to the tabs. The tabs change to Add-ons, Maps, Texture packs, Scripts and
+      Skins, and add-ons from CurseForge load. Pick a version like **1.21.50** and open a project: its versions have
+      `.mcaddon` downloads.
+- [ ] **Publish → Edition: Bedrock Edition**: the types, game versions and categories switch to Bedrock ones.
 - [ ] **Customize profile**: set a Minecraft skin avatar, a banner and an accent color. Under **Accounts**, add
       Modrinth, CurseForge and GitHub usernames, then check that your **Profile** shows all three links.
 

@@ -1,5 +1,5 @@
 import { useSyncExternalStore } from "react";
-import type { ContentType, Project, Source } from "../api/types";
+import type { ContentType, Edition, Project, Source } from "../api/types";
 import type { SourceFilter } from "../api/search";
 
 /** A small localStorage-backed store. Everything here lives only in the visitor's browser. */
@@ -37,6 +37,8 @@ function createStore<T extends object>(key: string, defaults: T) {
     get: () => state,
     set,
     reset: () => set(defaults),
+    subscribe,
+    defaults,
     use: () => useSyncExternalStore(subscribe, () => state),
   };
 }
@@ -154,6 +156,8 @@ export interface Settings {
   accent: string;
   defaultSource: SourceFilter;
   layout: "list" | "grid";
+  /** Which edition's tabs the header shows when you're not on a browse page. */
+  edition: Edition;
 }
 
 export const DEFAULT_SETTINGS: Settings = {
@@ -161,6 +165,7 @@ export const DEFAULT_SETTINGS: Settings = {
   accent: "#8152d4",
   defaultSource: "all",
   layout: "list",
+  edition: "java",
 };
 
 export const settingsStore = createStore<Settings>("neptune:settings", DEFAULT_SETTINGS);

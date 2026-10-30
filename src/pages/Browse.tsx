@@ -1,9 +1,9 @@
 import { LayoutGrid, List, SearchX, SlidersHorizontal } from "lucide-react";
-import { useState, type ReactNode } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 import { getCurseForgeCategories } from "../api/curseforge";
-import { getGameVersions, getModrinthCategories } from "../api/modrinth";
+import { getModrinthCategories } from "../api/modrinth";
 import { getNeptuneCategories } from "../api/neptune";
-import { SOURCE_LABELS, searchAll, sourcesFor, type SourceFilter } from "../api/search";
+import { SOURCE_LABELS, gameVersionsFor, searchAll, sourcesFor, type SourceFilter } from "../api/search";
 import type { ContentType, SearchParams, SortKey, Source, SourceResult } from "../api/types";
 import { ProjectResults, ResultsSkeleton } from "../components/ProjectList";
 import { Empty, Notice, Select } from "../components/ui";
@@ -54,7 +54,12 @@ export function Browse({ type }: { type: ContentType }) {
   const key = `${type}|${source}|${JSON.stringify(params)}`;
   useScrollTopOn(key);
   const results = useAsync(() => searchAll(params, source), [key]);
-  const versions = useAsync(getGameVersions, []);
+  const versions = useAsync(() => gameVersionsFor(cfg.edition), [cfg.edition]);
+
+  // Remember the edition so the header keeps showing its tabs on other pages.
+  useEffect(() => {
+    if (settingsStore.get().edition !== cfg.edition) settingsStore.set((s) => ({ ...s, edition: cfg.edition }));
+  }, [cfg.edition]);
   const categories = useAsync(
     () =>
       source === "modrinth"
@@ -177,7 +182,10 @@ export function Browse({ type }: { type: ContentType }) {
     <div>
       <div className="mb-5 flex flex-wrap items-end justify-between gap-3">
         <div>
-          <h1 className="text-[22px] font-semibold tracking-tight">{cfg.label}</h1>
+          <h1 className="flex items-center gap-2 text-[22px] font-semibold tracking-tight">
+            {cfg.label}
+            {cfg.edition === "bedrock" && <span className="chip h-6 px-2 text-[12px] font-medium text-fg">Bedrock Edition</span>}
+          </h1>
           <p className="num mt-1 text-[13px] text-muted min-h-5">
             {results.loading ? "Searching…" : counts.length ? `${counts.join(" · ")} ${resultTotal === 1 ? "result" : "results"}` : ""}
             {params.query && !results.loading && <> for “{params.query}”</>}

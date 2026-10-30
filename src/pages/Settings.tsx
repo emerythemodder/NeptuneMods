@@ -3,6 +3,8 @@ import { useRef, useState, type ReactNode } from "react";
 import type { SourceFilter } from "../api/search";
 import { Notice, PageHeader, Select } from "../components/ui";
 import { ACCENTS } from "../lib/appearance";
+import { accountsEnabled, deleteAccount, signInMethods, signOut, useAuth } from "../lib/auth";
+import { Link } from "../lib/router";
 import { collectionsStore, profileStore, settingsStore, type Theme } from "../lib/store";
 
 function Row({ title, hint, children }: { title: string; hint?: string; children: ReactNode }) {
@@ -62,6 +64,8 @@ export function SettingsPage() {
           <Notice tone={msg.tone}>{msg.text}</Notice>
         </div>
       )}
+
+      {accountsEnabled && <AccountSection onMessage={setMsg} />}
 
       <h2 className="mb-2 text-[11px] font-semibold uppercase tracking-wider text-faint">Appearance</h2>
       <div className="panel mb-8">
@@ -144,5 +148,51 @@ export function SettingsPage() {
         </Row>
       </div>
     </div>
+  );
+}
+
+function AccountSection({ onMessage }: { onMessage: (m: { tone: "info" | "error"; text: string }) => void }) {
+  const auth = useAuth();
+  const [busy, setBusy] = useState(false);
+
+  const remove = async () => {
+    if (!confirm("Delete your Neptune account? Your synced profile and collections are deleted too. This can't be undone.")) return;
+    setBusy(true);
+    try {
+      await deleteAccount();
+      onMessage({ tone: "info", text: "Your account was deleted. Anything saved in this browser is still here until you clear it below." });
+    } catch (e) {
+      onMessage({ tone: "error", text: e instanceof Error ? e.message : "Couldn't delete your account." });
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  return (
+    <>
+      <h2 className="mb-2 text-[11px] font-semibold uppercase tracking-wider text-faint">Account</h2>
+      <div className="panel mb-8">
+        {auth.status === "signed-in" ? (
+          <>
+            <Row title={auth.user?.email ?? "Signed in"} hint={`Signed in with ${signInMethods(auth.user).join(", ") || "email"}. Your profile, collections and settings sync to this account.`}>
+              <button className="btn" onClick={() => signOut()}>
+                Sign out
+              </button>
+            </Row>
+            <Row title="Delete account" hint="Removes your account and everything synced to it.">
+              <button className="btn text-red-400" onClick={remove} disabled={busy}>
+                <Trash2 size={14} /> Delete
+              </button>
+            </Row>
+          </>
+        ) : (
+          <Row title="Not signed in" hint="Sign in to keep your profile and collections on every device.">
+            <Link to="/signin" className="btn btn-primary">
+              Sign in
+            </Link>
+          </Row>
+        )}
+      </div>
+    </>
   );
 }

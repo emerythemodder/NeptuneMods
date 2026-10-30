@@ -1,7 +1,9 @@
 # Neptune
 
-Find and publish Minecraft mods, modpacks, shaders, resource packs, data packs, plugins and worlds. Neptune lists its own
-projects alongside Modrinth and CurseForge, live at <https://neptunemc.com>.
+Find and publish Minecraft content for Java Edition (mods, modpacks, shaders, resource packs, data packs, plugins and
+worlds) and Bedrock Edition (add-ons, maps, texture packs, scripts and skins). Neptune lists its own projects alongside
+Modrinth and CurseForge, live at <https://neptunemc.com>. Modrinth only hosts Java content, so Bedrock pages show
+Neptune and CurseForge.
 
 - Filters (source, game version, loader, category, sort) are applied by each source and kept in the URL.
 - Every number shown comes from GitHub, Modrinth or the CurseForge API.
@@ -40,7 +42,7 @@ Run the tests with `npm test`, or try the site with a sample Neptune project wit
    | AAAA  | @     | 2606:50c0:8001::153                |
    | AAAA  | @     | 2606:50c0:8002::153                |
    | AAAA  | @     | 2606:50c0:8003::153                |
-   | CNAME | www   | `emerythemodder.github.io` |
+   | CNAME | www   | `<your-github-username>.github.io` |
 
 2. In the GitHub repo, open **Settings → Pages → Custom domain**, enter `neptunemc.com` and save. When the DNS check
    passes, tick **Enforce HTTPS**. Cloudflare DNS usually updates within minutes; the certificate can take up to an hour.

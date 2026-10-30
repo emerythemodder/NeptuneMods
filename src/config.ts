@@ -17,3 +17,17 @@ function repoFromLocation(): string | null {
   const first = location.pathname.split("/").filter(Boolean)[0];
   return first && first !== "index.html" ? `${m[1]}/${first}` : `${m[1]}/${m[1]}.github.io`;
 }
+
+/**
+ * Supabase project for accounts (email, Google, Microsoft and Discord sign-in) and syncing
+ * profiles between devices. Both values are public by design; access is limited by the
+ * row-level security rules in supabase/schema.sql. Leave empty to run without accounts.
+ */
+export const SUPABASE_URL: string = import.meta.env.VITE_SUPABASE_URL || "";
+export const SUPABASE_ANON_KEY: string = import.meta.env.VITE_SUPABASE_ANON_KEY || "";
+
+/** GitHub repo whose Releases host the Neptune Launcher installer. */
+export const LAUNCHER_REPO: string = NEPTUNE_REPO || "emerythemodder/NeptuneMods";
+
+/** File name the launcher build gives its installer (neptune-launcher/package.json). */
+export const LAUNCHER_ASSET = "Neptune-Launcher-Setup.exe";

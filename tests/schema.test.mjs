@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import { describe, test } from "node:test";
-import { parseSubmission, validateEntry } from "../scripts/registry-schema.mjs";
+import { TYPES, parseSubmission, validateEntry } from "../scripts/registry-schema.mjs";
+import { CONTENT } from "../src/lib/content.ts";
 
 const good = {
   slug: "cool-mod",
@@ -51,6 +52,15 @@ describe("validateEntry", () => {
   test("only allows https links and icons", () => {
     const { errors } = validateEntry({ ...good, icon: "javascript:alert(1)", links: { website: "http://insecure.example" } });
     assert.equal(errors.length, 2);
+  });
+
+  test("accepts Bedrock submissions with Bedrock versions and no loaders", () => {
+    const { errors } = validateEntry({ ...good, type: "bedrock-addons", loaders: [], gameVersions: ["1.21.40", "26.50"] });
+    assert.deepEqual(errors, []);
+  });
+
+  test("knows every content type the site shows", () => {
+    assert.deepEqual([...TYPES].sort(), Object.keys(CONTENT).sort());
   });
 
   test("allows at most 3 categories", () => {

@@ -34,6 +34,12 @@ describe("primaryAsset", () => {
     assert.equal(primaryAsset([a("readme.txt"), a("pack.zip")]).name, "pack.zip");
   });
 
+  test("picks Bedrock files over a README, whatever order they're in", () => {
+    assert.equal(primaryAsset([a("README.txt"), a("My Addon.mcaddon")]).name, "My Addon.mcaddon");
+    assert.equal(primaryAsset([a("notes.md"), a("Skyblock.mcworld")]).name, "Skyblock.mcworld");
+    assert.equal(primaryAsset([a("changelog.txt"), a("Skins.mcpack")]).name, "Skins.mcpack");
+  });
+
   test("returns null when a release has no files", () => {
     assert.equal(primaryAsset([]), null);
   });

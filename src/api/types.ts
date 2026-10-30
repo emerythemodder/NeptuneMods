@@ -7,7 +7,14 @@ export type ContentType =
   | "shaders"
   | "datapacks"
   | "plugins"
-  | "worlds";
+  | "worlds"
+  | "bedrock-addons"
+  | "bedrock-maps"
+  | "bedrock-texturepacks"
+  | "bedrock-scripts"
+  | "bedrock-skins";
+
+export type Edition = "java" | "bedrock";
 
 export type SortKey = "relevance" | "downloads" | "follows" | "newest" | "updated";
 

@@ -1,8 +1,10 @@
-import { BarChart3, Bookmark, Pencil, Search, Settings, Upload, User, X } from "lucide-react";
+import { BarChart3, Bookmark, Cloud, CloudOff, Download, LogOut, Pencil, Search, Settings, Upload, User, X } from "lucide-react";
 import { useEffect, useRef, useState, type FormEvent, type ReactNode } from "react";
-import { CONTENT, CONTENT_TYPES, isContentType } from "../lib/content";
+import { CONTENT, EDITIONS, isContentType, typesFor } from "../lib/content";
 import { Link, navigate, useRoute } from "../lib/router";
-import { profileStore } from "../lib/store";
+import { profileStore, settingsStore } from "../lib/store";
+import { accountsEnabled, signOut, useAuth } from "../lib/auth";
+import { useSyncStatus } from "../lib/sync";
 import { Avatar, displayName } from "./Avatar";
 
 export function Logo() {
@@ -17,6 +19,7 @@ export function Logo() {
 function SearchBox({ className = "" }: { className?: string }) {
   const { segments, query } = useRoute();
   const onBrowse = segments[0] === "browse" && isContentType(segments[1] ?? "");
+  const { edition } = settingsStore.use();
   const q = onBrowse ? (query.get("q") ?? "") : "";
   const [value, setValue] = useState(q);
   useEffect(() => {
@@ -25,7 +28,7 @@ function SearchBox({ className = "" }: { className?: string }) {
 
   const submit = (e: FormEvent) => {
     e.preventDefault();
-    const type = onBrowse ? segments[1] : "mods";
+    const type = onBrowse ? segments[1] : typesFor(settingsStore.get().edition)[0];
     const next = Object.fromEntries(onBrowse ? query : []);
     navigate(`/browse/${type}`, { ...next, q: value.trim(), page: undefined });
   };
@@ -36,7 +39,13 @@ function SearchBox({ className = "" }: { className?: string }) {
       <input
         value={value}
         onChange={(e) => setValue(e.target.value)}
-        placeholder={onBrowse ? `Search ${CONTENT[segments[1] as keyof typeof CONTENT].label.toLowerCase()}` : "Search mods, modpacks, shaders…"}
+        placeholder={
+          onBrowse
+            ? `Search ${CONTENT[segments[1] as keyof typeof CONTENT].label.toLowerCase()}`
+            : edition === "bedrock"
+              ? "Search add-ons, maps, skins…"
+              : "Search mods, modpacks, shaders…"
+        }
         className="input pl-8 pr-8"
         aria-label="Search"
       />
@@ -57,8 +66,12 @@ function SearchBox({ className = "" }: { className?: string }) {
   );
 }
 
+const SYNC_LABEL = { off: "", loading: "Syncing…", saving: "Saving…", saved: "Synced to your account", error: "Couldn't sync. Changes are kept here." };
+
 function UserMenu() {
   const profile = profileStore.use();
+  const auth = useAuth();
+  const sync = useSyncStatus();
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
   const { path } = useRoute();
@@ -82,6 +95,7 @@ function UserMenu() {
     ["/profile/edit", "Customize profile", <Pencil size={14} />],
     ["/collections", "Collections", <Bookmark size={14} />],
     ["/publish", "Publish a project", <Upload size={14} />],
+    ["/download", "Download the launcher", <Download size={14} />],
     ["/stats", "Creator stats", <BarChart3 size={14} />],
     ["/settings", "Settings", <Settings size={14} />],
   ];
@@ -95,7 +109,17 @@ function UserMenu() {
         <div className="absolute right-0 top-full mt-2 w-56 panel shadow-xl shadow-black/20 py-1 z-50">
           <div className="px-3 py-2 border-b border-line mb-1">
             <div className="font-medium text-fg truncate">{displayName(profile)}</div>
-            {profile.handle && <div className="text-[12px] text-muted truncate">@{profile.handle}</div>}
+            {auth.user?.email ? (
+              <div className="text-[12px] text-muted truncate">{auth.user.email}</div>
+            ) : (
+              profile.handle && <div className="text-[12px] text-muted truncate">@{profile.handle}</div>
+            )}
+            {sync !== "off" && (
+              <div className={`mt-1 flex items-center gap-1 text-[11px] ${sync === "error" ? "text-red-400" : "text-faint"}`}>
+                {sync === "error" ? <CloudOff size={11} /> : <Cloud size={11} />}
+                {SYNC_LABEL[sync]}
+              </div>
+            )}
           </div>
           {items.map(([to, label, icon]) => (
             <Link key={to} to={to} className="flex items-center gap-2.5 px-3 py-1.5 text-[13px] text-muted hover:text-fg hover:bg-surface-2">
@@ -103,6 +127,14 @@ function UserMenu() {
               {label}
             </Link>
           ))}
+          {auth.status === "signed-in" && (
+            <button
+              onClick={() => signOut()}
+              className="mt-1 flex w-full items-center gap-2.5 border-t border-line px-3 py-2 text-left text-[13px] text-muted hover:bg-surface-2 hover:text-fg"
+            >
+              <LogOut size={14} /> Sign out
+            </button>
+          )}
         </div>
       )}
     </div>
@@ -111,10 +143,30 @@ function UserMenu() {
 
 function TypeNav() {
   const { segments } = useRoute();
-  const active = segments[0] === "browse" ? segments[1] : null;
+  const settings = settingsStore.use();
+  const active = segments[0] === "browse" && isContentType(segments[1] ?? "") ? segments[1] : null;
+  // On a browse page the edition follows the page; elsewhere it's the last one picked.
+  const edition = active ? CONTENT[active as keyof typeof CONTENT].edition : settings.edition;
   return (
-    <nav className="scroll-x -mb-px flex gap-1 overflow-x-auto" aria-label="Content types">
-      {CONTENT_TYPES.map((t) => (
+    <nav className="scroll-x -mb-px flex items-center gap-1 overflow-x-auto" aria-label="Content types">
+      <div className="mr-2 flex shrink-0 rounded-md border border-line bg-surface p-0.5" role="group" aria-label="Edition">
+        {EDITIONS.map((e) => (
+          <button
+            key={e.value}
+            onClick={() => {
+              settingsStore.set((s) => ({ ...s, edition: e.value }));
+              if (e.value !== edition) navigate(`/browse/${typesFor(e.value)[0]}`);
+            }}
+            aria-pressed={edition === e.value}
+            className={`rounded px-2 py-0.5 text-[12px] font-medium transition-colors ${
+              edition === e.value ? "bg-accent text-accent-fg" : "text-muted hover:text-fg"
+            }`}
+          >
+            {e.label}
+          </button>
+        ))}
+      </div>
+      {typesFor(edition).map((t) => (
         <Link
           key={t}
           to={`/browse/${t}`}
@@ -130,6 +182,7 @@ function TypeNav() {
 }
 
 export function Layout({ children }: { children: ReactNode }) {
+  const auth = useAuth();
   return (
     <div className="flex min-h-screen flex-col">
       <header className="sticky top-0 z-40 border-b border-line bg-bg/90 backdrop-blur">
@@ -138,12 +191,20 @@ export function Layout({ children }: { children: ReactNode }) {
             <Logo />
             <SearchBox className="hidden sm:block flex-1 max-w-lg" />
             <div className="ml-auto flex items-center gap-1">
-              <Link to="/publish" className="btn mr-1 hidden md:inline-flex">
+              <Link to="/download" className="btn mr-1 hidden md:inline-flex">
+                <Download size={14} /> Get the app
+              </Link>
+              <Link to="/publish" className="btn mr-1 hidden lg:inline-flex">
                 <Upload size={14} /> Publish
               </Link>
               <Link to="/collections" className="btn btn-ghost btn-icon" title="Collections" aria-label="Collections">
                 <Bookmark size={16} />
               </Link>
+              {accountsEnabled && auth.status === "signed-out" && (
+                <Link to="/signin" className="btn btn-primary mr-1">
+                  Sign in
+                </Link>
+              )}
               <UserMenu />
             </div>
           </div>

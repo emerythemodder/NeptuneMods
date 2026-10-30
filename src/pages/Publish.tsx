@@ -1,14 +1,14 @@
 import { Check, CircleAlert, Copy, ExternalLink, GitBranch, Send } from "lucide-react";
 import { useEffect, useState } from "react";
 import { validateEntry } from "../../scripts/registry-schema.mjs";
-import { getGameVersions } from "../api/modrinth";
 import { getNeptuneCategories } from "../api/neptune";
-import type { ContentType, Project } from "../api/types";
+import { gameVersionsFor } from "../api/search";
+import type { ContentType, Edition, Project } from "../api/types";
 import { NEPTUNE_REPO } from "../config";
-import { Field, Section } from "../components/form";
+import { Field, Section, Segmented } from "../components/form";
 import { ProjectRow } from "../components/ProjectList";
 import { Notice, PageHeader, Select } from "../components/ui";
-import { CONTENT, CONTENT_TYPES, labelize, loaderLabel } from "../lib/content";
+import { CONTENT, EDITIONS, labelize, loaderLabel, typesFor } from "../lib/content";
 import { formatDate } from "../lib/format";
 import { useRoute } from "../lib/router";
 import { DEFAULT_DRAFT, draftStore, profileStore, type PublishDraft } from "../lib/store";
@@ -21,6 +21,9 @@ interface RepoCheck {
   releases?: number;
   latest?: { name: string; date: string; file: string | null };
 }
+
+// Files Neptune can offer as a download, Java or Bedrock.
+const PLAYABLE_FILE = /\.(jar|mrpack|zip|mcaddon|mcpack|mcworld|mctemplate)$/i;
 
 const slugify = (s: string) =>
   s
@@ -91,7 +94,7 @@ export function Publish() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const versions = useAsync(getGameVersions, []);
+  const versions = useAsync(() => gameVersionsFor(CONTENT[draft.type].edition), [CONTENT[draft.type].edition]);
   const categories = useAsync(() => getNeptuneCategories(draft.type), [draft.type]);
   const cfg = CONTENT[draft.type];
 
@@ -130,7 +133,7 @@ export function Publish() {
         latest: latest && {
           name: latest.name || latest.tag_name,
           date: latest.published_at,
-          file: latest.assets.find((a) => /\.(jar|zip|mrpack)$/i.test(a.name))?.name ?? null,
+          file: latest.assets.find((a) => PLAYABLE_FILE.test(a.name))?.name ?? null,
         },
       });
     } catch {
@@ -191,7 +194,7 @@ export function Publish() {
 
       <div className="grid gap-6 lg:grid-cols-[1fr_340px]">
         <div className="min-w-0 space-y-5">
-          <Section id="repo" title="1. GitHub repository" hint="Neptune lists the releases in a public GitHub repo. Attach your .jar, .zip or .mrpack to each release.">
+          <Section id="repo" title="1. GitHub repository" hint="Neptune lists the releases in a public GitHub repo. Attach your file to each release: a .jar for Java mods, or a .mcaddon, .mcpack or .mcworld for Bedrock.">
             <div className="flex gap-2">
               <div className="relative flex-1">
                 <GitBranch size={14} className="pointer-events-none absolute left-2.5 top-1/2 -translate-y-1/2 text-faint" />
@@ -220,7 +223,7 @@ export function Publish() {
                   <p className="mt-1 text-muted">
                     {check.releases}
                     {check.releases === 5 ? "+" : ""} release{check.releases === 1 ? "" : "s"}. Latest: {check.latest?.name} ({formatDate(check.latest!.date)})
-                    {check.latest?.file ? ` with ${check.latest.file}` : ", but it has no .jar/.zip/.mrpack attached"}.
+                    {check.latest?.file ? ` with ${check.latest.file}` : `, but it has no ${cfg.files.join(" or ")} file attached`}.
                   </p>
                 ) : (
                   <p className="mt-1 flex items-start gap-1.5 text-amber-500">
@@ -257,13 +260,22 @@ export function Publish() {
             <Field label="Summary" hint={`${draft.summary.length}/200. Shown in search results.`}>
               <textarea className="input" rows={2} maxLength={200} value={draft.summary} onChange={(e) => set({ summary: e.target.value })} />
             </Field>
-            <Field label="Type">
+            <div>
+              <span className="label">Edition</span>
+              <Segmented<Edition>
+                value={cfg.edition}
+                options={EDITIONS.map((e) => [e.value, `${e.label} Edition`])}
+                // Versions, loaders and categories differ between editions, so start those over.
+                onChange={(ed) => ed !== cfg.edition && set({ type: typesFor(ed)[0], loaders: [], categories: [], gameVersions: [] })}
+              />
+            </div>
+            <Field label="Type" hint={`Players download a ${cfg.files.join(" or ")} file.`}>
               <Select
                 value={draft.type}
                 onChange={(e) => set({ type: e.target.value as ContentType, loaders: [], categories: [] })}
                 className="max-w-xs"
               >
-                {CONTENT_TYPES.map((t) => (
+                {typesFor(cfg.edition).map((t) => (
                   <option key={t} value={t}>
                     {CONTENT[t].label}
                   </option>
